@@ -1,0 +1,217 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#4f46e5">
+<title>Grade Planner</title>
+<style>
+:root{--bg:#f3f0ff;--card:#fff;--tx:#1e1b3a;--mut:#6d6a8a;--ac:#6366f1;--bd:#e5e1fb;--ok:#10b981;--wa:#f59e0b;--bad:#f43f5e;--g:linear-gradient(135deg,#6366f1,#a855f7 55%,#ec4899)}
+@media(prefers-color-scheme:dark){:root{--bg:#14122a;--card:#1f1c3d;--tx:#f0eeff;--mut:#a5a1c9;--ac:#a5a8ff;--bd:#322e5c}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.45 system-ui,sans-serif}
+.app{max-width:640px;margin:0 auto;padding:0 14px 90px}
+header{margin:0 -14px 8px;padding:22px 18px 18px;background:var(--g);color:#fff;border-radius:0 0 26px 26px;box-shadow:0 8px 24px #6366f155}
+h1{margin:0;font-size:24px}h2{font-size:19px;margin:20px 0 8px}
+.chipx{display:inline-block;font-size:12px;background:#ffffff30;border-radius:99px;padding:3px 12px;margin-top:8px}
+.card{background:var(--card);border:1px solid var(--bd);border-left:5px solid var(--ac);border-radius:16px;padding:14px;margin:12px 0;box-shadow:0 4px 14px #6366f114}
+.r-Safe{border-left-color:var(--ok)}.r-Watch{border-left-color:var(--wa)}.r-AtRisk{border-left-color:var(--bad)}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.f{display:flex;flex-direction:column;font-size:13px;color:var(--mut);gap:4px}
+input,select{font:inherit;color:var(--tx);background:var(--bg);border:1.5px solid var(--bd);border-radius:12px;padding:10px;width:100%}
+input:focus,select:focus{outline:none;border-color:var(--ac)}
+.row{display:grid;grid-template-columns:62px 1fr 64px 34px;gap:6px;margin:6px 0;align-items:center}
+.crow{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:6px 0}
+button{font:inherit;border:0;border-radius:12px;padding:11px 16px;background:var(--g);color:#fff;cursor:pointer;font-weight:600;box-shadow:0 4px 12px #a855f744}
+button.sec{background:transparent;color:var(--ac);border:1.5px solid var(--bd);box-shadow:none}button.x{background:transparent;color:var(--bad);padding:6px;box-shadow:none}
+button:disabled{opacity:.5}.btns{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}
+nav{position:fixed;bottom:0;left:0;right:0;display:flex;background:var(--card);border-top:1px solid var(--bd);padding-bottom:env(safe-area-inset-bottom);box-shadow:0 -6px 20px #6366f122}
+nav button{flex:1;background:transparent;color:var(--mut);border-radius:0;padding:8px 2px;font-size:12px;box-shadow:none;font-weight:500}nav button span{display:block;font-size:20px}
+nav button.on{color:var(--ac);font-weight:700;background:linear-gradient(#a855f722,transparent)}
+.pill{font-size:12px;font-weight:700;padding:3px 11px;border-radius:99px;color:#fff}.Safe{background:var(--ok)}.Watch{background:var(--wa)}.AtRisk{background:var(--bad)}
+.top{display:flex;align-items:center;gap:16px}.big{font-size:42px;font-weight:800;line-height:1;background:var(--g);-webkit-background-clip:text;background-clip:text;color:transparent}.mut{color:var(--mut);font-size:13px}
+.ring{width:112px;height:112px}.trk{fill:none;stroke:var(--bd);stroke-width:10}.bar{fill:none;stroke-width:10;stroke-linecap:round}.rv{font-size:24px;font-weight:800;fill:var(--tx)}
+ul{margin:6px 0;padding-left:18px}li{margin:5px 0}.err{color:var(--bad);margin:10px 0;font-weight:600}.ch{display:flex;justify-content:space-between;align-items:center}
+table{width:100%;border-collapse:collapse;font-size:14px}td,th{padding:7px 4px;border-bottom:1px solid var(--bd);text-align:left}th{color:var(--ac)}
+.chips{display:flex;gap:8px;overflow-x:auto;margin:12px 0}.chip2{background:var(--card);color:var(--ac);border:1.5px solid var(--bd);box-shadow:none;white-space:nowrap}.chip2.on{background:var(--g);color:#fff;border:0}
+.track{height:10px;background:var(--bd);border-radius:9px;overflow:hidden;margin:5px 0}.fill{height:100%;border-radius:9px;background:var(--ok)}.fill.r-Watch{background:var(--wa)}.fill.r-AtRisk{background:var(--bad)}
+.sess{margin:6px 0;font-size:14px}.tag{background:var(--g);color:#fff;border-radius:8px;padding:2px 8px;font-size:12px;font-weight:700}.day{border-left-color:#ec4899}
+</style>
+
+</head>
+<body>
+<div id="root"></div>
+<script src="https://cdn.jsdelivr.net/npm/react@18.3.1/umd/react.production.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/htm@3.1.1/dist/htm.umd.js"></script>
+<script>
+const {useState,useEffect}=React, html=htm.bind(React.createElement);
+const KEY="spp-v2", TABS=[["Profile","👤"],["Courses","📚"],["Results","📊"],["Target","🎯"],["Plan","🗓️"]];
+const CATL={calculation:"Calculations & problem-solving",applied:"Applied / technical skills",writing:"Essays & writing",theory:"Theory & reading",practical:"Practical, lab or studio",general:"General studies (GST)"};
+const CATS=Object.keys(CATL), GR=["A","B","C","D","E","F"];
+const catOpts=CATS.map(c=>[c,CATL[c]]);
+const CAS=[["30","30 CA + 70 exam"],["40","40 CA + 60 exam"],["0","No CA (exam /100)"]];
+const mk=(code,units,category,difficulty,ca_max)=>({code,units,category,difficulty,ca_max,ca_score:"",attendance_pct:"",assignments_done:"",assignments_total:""});
+const blank=()=>({student:{department:"CSC",level:"200",entry_score:"",study_hours:"10",sleep_hours:"7",outside_workload:false,expected_attendance_pct:"80",history:[]},courses:[],target:"4.0"});
+const sample=()=>({student:{department:"CSC",level:"200",entry_score:"",study_hours:"8",sleep_hours:"6.5",outside_workload:false,expected_attendance_pct:"72",
+ history:[[{units:3,category:"calculation",grade:"B"},{units:3,category:"applied",grade:"A"},{units:2,category:"general",grade:"A"},{units:3,category:"theory",grade:"C"}],
+ [{units:3,category:"calculation",grade:"D"},{units:3,category:"applied",grade:"B"},{units:2,category:"theory",grade:"B"},{units:4,category:"practical",grade:"E"}]]},
+ courses:[mk("CSC 301",4,"applied",4,"30"),mk("MTH 303",3,"calculation",5,"0"),{...mk("EEE 311",3,"practical",4,"30"),ca_score:"12",attendance_pct:"65",assignments_done:"2",assignments_total:"5"},{...mk("CSC 305",3,"theory",2,"30"),ca_score:"26"},mk("GST 301",2,"general",1,"0")],target:"3.5"});
+const n=v=>v===""||v==null?null:Number(v);
+
+function payload(a){
+  const s=a.student, seen=new Set();
+  const courses=a.courses.map((c,i)=>{
+    let code=(c.code||"").trim()||`Course ${i+1}`; while(seen.has(code)) code+="*"; seen.add(code);
+    const ca=Number(c.ca_max);
+    return {code,units:Number(c.units),category:c.category,course_type:c.category==="general"?"general":"core",difficulty:Number(c.difficulty),ca_max:ca,
+      ca_score:ca>0?n(c.ca_score):null,attendance_pct:n(c.attendance_pct),assignments_done:Number(c.assignments_total)===0?null:n(c.assignments_done),assignments_total:n(c.assignments_total)};
+  });
+  return {student:{department:s.department||"CSC",level:Number(s.level),entry_score:n(s.entry_score),study_hours:Number(s.study_hours),sleep_hours:Number(s.sleep_hours),
+    outside_workload:!!s.outside_workload,expected_attendance_pct:Number(s.expected_attendance_pct),
+    history:s.history.filter(x=>x.length).map(x=>x.map(c=>({units:Number(c.units),category:c.category,grade:c.grade})))},courses};
+}
+async function call(path,body){
+  let r; try{r=await fetch(path,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)})}
+  catch{throw new Error("Can't reach the server. Is uvicorn running?")}
+  const j=await r.json().catch(()=>({}));
+  if(!r.ok) throw new Error(Array.isArray(j.detail)?j.detail.map(x=>`${(x.loc||[]).slice(1).join(" › ")}: ${x.msg}`).join("; "):(j.detail||"Request failed"));
+  return j;
+}
+
+const Field=({label,children})=>html`<label className="f"><span>${label}</span>${children}</label>`;
+const Num=({v,on,min,max,step})=>html`<input type="number" inputMode="decimal" value=${v} min=${min} max=${max} step=${step||"any"} onInput=${e=>on(e.target.value)}/>`;
+const Sel=({v,on,opts})=>html`<select value=${v} onChange=${e=>on(e.target.value)}>${opts.map(o=>{const [a,b]=Array.isArray(o)?o:[o,o];return html`<option key=${a} value=${a}>${b}</option>`})}</select>`;
+const List=({items})=>html`<ul>${items.map((t,i)=>html`<li key=${i}>${t}</li>`)}</ul>`;
+
+function Ring({value,max}){
+  const r=48,c=2*Math.PI*r,p=Math.max(0,Math.min(1,value/max));
+  return html`<svg viewBox="0 0 120 120" className="ring"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stopColor="#f472b6"/><stop offset="1" stopColor="#6366f1"/></linearGradient></defs>
+    <circle cx="60" cy="60" r=${r} className="trk"/>
+    <circle cx="60" cy="60" r=${r} className="bar" stroke="url(#g)" strokeDasharray=${c} strokeDashoffset=${c*(1-p)} transform="rotate(-90 60 60)"/>
+    <text x="60" y="68" textAnchor="middle" className="rv">${value.toFixed(2)}</text></svg>`;
+}
+
+function Profile({app,up,goto,load}){
+  const s=app.student, set=(k,v)=>up(a=>{a.student[k]=v});
+  return html`<div>
+    ${!app.courses.length&&!s.history.length?html`<div className="card"><b>Welcome.</b> Enter your past results and this semester's courses to get a predicted GPA, risk tags and advice.
+      <div className="btns"><button onClick=${load}>Try a sample student</button></div></div>`:null}
+    <h2>About you</h2>
+    <div className="grid">
+      <${Field} label="Department"><input value=${s.department} onInput=${e=>set("department",e.target.value)}/><//>
+      <${Field} label="Level"><${Sel} v=${s.level} on=${v=>set("level",v)} opts=${["100","200","300","400","500"]}/><//>
+      <${Field} label="Study hours per week"><${Num} v=${s.study_hours} on=${v=>set("study_hours",v)} min="0" max="80"/><//>
+      <${Field} label="Sleep hours per night"><${Num} v=${s.sleep_hours} on=${v=>set("sleep_hours",v)} min="2" max="14"/><//>
+      <${Field} label="Expected attendance %"><${Num} v=${s.expected_attendance_pct} on=${v=>set("expected_attendance_pct",v)} min="0" max="100"/><//>
+      <${Field} label="Entry score (optional)"><${Num} v=${s.entry_score} on=${v=>set("entry_score",v)} min="0" max="400"/><//>
+    </div>
+    <label className="f" style=${{flexDirection:"row",alignItems:"center",marginTop:10}}><input type="checkbox" style=${{width:"auto"}} checked=${s.outside_workload} onChange=${e=>set("outside_workload",e.target.checked)}/> I have work or business outside school</label>
+    <h2>Past results</h2>
+    <div className="mut">One card per past semester. Leave empty if you are in first semester.</div>
+    ${s.history.map((sem,i)=>html`<div className="card" key=${i}><div className="ch"><b>Semester ${i+1}</b>
+      <button className="x" onClick=${()=>up(a=>{a.student.history.splice(i,1)})}>Remove</button></div>
+      ${sem.map((c,j)=>html`<div className="row" key=${j}>
+        <${Sel} v=${c.units} on=${v=>up(a=>{a.student.history[i][j].units=Number(v)})} opts=${[1,2,3,4,5,6]}/>
+        <${Sel} v=${c.category} on=${v=>up(a=>{a.student.history[i][j].category=v})} opts=${catOpts}/>
+        <${Sel} v=${c.grade} on=${v=>up(a=>{a.student.history[i][j].grade=v})} opts=${GR}/>
+        <button className="x" onClick=${()=>up(a=>{a.student.history[i].splice(j,1)})}>✕</button></div>`)}
+      <button className="sec" onClick=${()=>up(a=>{a.student.history[i].push({units:3,category:"theory",grade:"B"})})}>+ Add course</button></div>`)}
+    <div className="btns"><button className="sec" onClick=${()=>up(a=>{a.student.history.push([{units:3,category:"theory",grade:"B"}])})}>+ Add past semester</button>
+      <button onClick=${()=>goto("Courses")}>Next: this semester</button></div>
+  </div>`;
+}
+
+function Courses({app,up,goto}){
+  return html`<div><h2>This semester's courses</h2>
+    <div className="mut">Pick the assessment structure from your course outline. Not sure? Leave 30 CA + 70 exam.</div>
+    ${app.courses.map((c,i)=>{const set=(k,v)=>up(a=>{a.courses[i][k]=v});return html`<div className="card" key=${i}>
+      <div className="ch"><b>Course ${i+1}</b><button className="x" onClick=${()=>up(a=>{a.courses.splice(i,1)})}>Remove</button></div>
+      <div className="crow"><${Field} label="Code"><input value=${c.code} placeholder="CSC 301" onInput=${e=>set("code",e.target.value)}/><//>
+        <${Field} label="Units"><${Sel} v=${c.units} on=${v=>set("units",v)} opts=${[1,2,3,4,5,6]}/><//>
+        <${Field} label="Category"><${Sel} v=${c.category} on=${v=>set("category",v)} opts=${catOpts}/><//>
+        <${Field} label="How hard? (1-5)"><${Sel} v=${c.difficulty} on=${v=>set("difficulty",v)} opts=${[1,2,3,4,5]}/><//></div>
+      <${Field} label="Assessment"><${Sel} v=${c.ca_max} on=${v=>set("ca_max",v)} opts=${CAS}/><//></div>`})}
+    <div className="btns"><button className="sec" onClick=${()=>up(a=>{a.courses.push(mk("",3,"theory",3,"30"))})}>+ Add course</button>
+      <button disabled=${!app.courses.length} onClick=${()=>goto("Results")}>Predict</button></div>
+  </div>`;
+}
+
+function Results({app,up}){
+  const [res,setRes]=useState(null),[err,setErr]=useState(""),[busy,setBusy]=useState(false);
+  const run=async()=>{setBusy(true);setErr("");try{setRes(await call("/predict",payload(app)))}catch(e){setErr(e.message)}setBusy(false)};
+  useEffect(()=>{if(app.courses.length)run()},[]);
+  if(!app.courses.length) return html`<div className="card">Add this semester's courses first.</div>`;
+  const sm=res&&res.semester, t=Number(app.target)||4;
+  return html`<div>
+    ${err?html`<div className="err">${err}</div>`:null}${busy&&!res?html`<div className="card">Working it out…</div>`:null}
+    ${sm?html`<div className="card"><div className="top"><${Ring} value=${sm.predicted_cgpa} max=${5}/>
+      <div><div className="mut">Predicted semester GPA</div><div className="big">${sm.predicted_gpa.toFixed(2)}</div>
+      <div className="mut">Range ${sm.gpa_low.toFixed(2)} to ${sm.gpa_high.toFixed(2)}${sm.current_cgpa!=null?` · CGPA now ${sm.current_cgpa}`:""}</div>
+      <div className="mut">Predicted CGPA ${sm.predicted_cgpa.toFixed(2)} · target ${t}</div></div></div>
+      ${sm.heavy_load?html`<div className="err">Heavy load: ${sm.units} units.</div>`:null}
+      <${List} items=${res.advice.semester.map(a=>a.text)}/></div>`:null}
+    ${res?res.courses.map((r,i)=>{const c=app.courses[i],set=(k,v)=>up(a=>{a.courses[i][k]=v});return html`<div className=${"card r-"+r.risk.replace("-","")} key=${i}>
+      <div className="ch"><b>${r.code}</b><span className=${"pill "+r.risk.replace("-","")}>${r.risk}</span></div>
+      <div className="mut">${r.units} units · predicted ${r.predicted_grade} (${r.predicted_score}, range ${r.range_low} to ${r.range_high}) · ${r.stage==="B"?"updated with your CA":"before CA data"}</div>
+      <${List} items=${(res.advice.courses[r.code]||[]).map(a=>a.text)}/>
+      <div className="mut" style=${{marginTop:8}}>Track this course</div>
+      <div className="crow">${Number(c.ca_max)>0?html`<${Field} label=${`CA so far (/${c.ca_max})`}><${Num} v=${c.ca_score} on=${v=>set("ca_score",v)} min="0" max=${c.ca_max}/><//>`:null}
+        <${Field} label="Attendance %"><${Num} v=${c.attendance_pct} on=${v=>set("attendance_pct",v)} min="0" max="100"/><//>
+        <${Field} label="Assignments done"><${Num} v=${c.assignments_done} on=${v=>set("assignments_done",v)} min="0"/><//>
+        <${Field} label="Assignments total (0 if none)"><${Num} v=${c.assignments_total} on=${v=>set("assignments_total",v)} min="0"/><//></div></div>`}):null}
+    ${res?html`<div className="btns"><button disabled=${busy} onClick=${run}>${busy?"Updating…":"Update prediction"}</button></div>
+      <div className="mut">${res.model_note}</div>`:null}
+  </div>`;
+}
+
+function Target({app,up}){
+  const [plan,setPlan]=useState(null),[err,setErr]=useState(""),[busy,setBusy]=useState(false),[pick,setPick]=useState(0);
+  const go=async()=>{setBusy(true);setErr("");try{setPlan(await call("/target",{...payload(app),target_cgpa:Number(app.target)}));setPick(0)}catch(e){setErr(e.message)}setBusy(false)};
+  const p=plan&&plan.options[pick];
+  return html`<div><h2>🎯 Target CGPA</h2>
+    <${Field} label="What CGPA do you want?"><${Num} v=${app.target} on=${v=>up(a=>{a.target=v})} min="0.1" max="5"/><//>
+    <div className="btns"><button disabled=${busy||!app.courses.length} onClick=${go}>Plan it</button></div>
+    ${err?html`<div className="err">${err}</div>`:null}
+    ${plan?html`<div className="chips">${plan.options.map((o,i)=>html`<button key=${i} className=${"chip2"+(i===pick?" on":"")} onClick=${()=>setPick(i)}>${o.label}</button>`)}</div>
+      <div className="card"><div className="mut">${p.blurb}</div>
+      <div className="mut">Needed semester GPA ${p.required_semester_gpa} · planned CGPA ${p.planned_cgpa} · best possible ${p.max_possible_cgpa}</div>
+      <${List} items=${p.advice}/>
+      <table><tr><th>Course</th><th>Aim for</th><th>Exam needed</th></tr>
+      ${p.plan.map(x=>html`<tr key=${x.code}><td>${x.code}</td><td><b>${x.target_grade}</b> (${x.min_total_score}+)</td><td>${x.exam_score_needed}/${x.exam_max}${x.assumes_typical_ca?"*":""}</td></tr>`)}</table>
+      <div className="mut">* assumes a typical CA score until you log yours. Try the other styles for a different route to the same target.</div></div>`:null}
+  </div>`;
+}
+
+function Plan({app}){
+  const [hrs,setHrs]=useState(app.student.study_hours),[useT,setUseT]=useState(true),[res,setRes]=useState(null),[err,setErr]=useState(""),[busy,setBusy]=useState(false);
+  const go=async()=>{setBusy(true);setErr("");try{setRes(await call("/studyplan",{...payload(app),weekly_hours:Number(hrs),target_cgpa:useT?Number(app.target):null}))}catch(e){setErr(e.message)}setBusy(false)};
+  const mx=res?Math.max(...res.courses.map(c=>c.hours),1):1;
+  return html`<div><h2>🗓️ Weekly study plan</h2>
+    <div className="mut">Your study hours are shared across courses by risk, difficulty and units, so time goes where it moves your grades most.</div>
+    <div className="grid" style=${{marginTop:10}}><${Field} label="Hours I can study per week"><${Num} v=${hrs} on=${setHrs} min="1" max="80"/><//>
+      <label className="f" style=${{justifyContent:"flex-end",flexDirection:"row",alignItems:"center",gap:8}}><input type="checkbox" style=${{width:"auto"}} checked=${useT} onChange=${e=>setUseT(e.target.checked)}/> Aim for my target CGPA (${app.target})</label></div>
+    <div className="btns"><button disabled=${busy||!app.courses.length} onClick=${go}>${busy?"Building…":"Build my week"}</button></div>
+    ${err?html`<div className="err">${err}</div>`:null}
+    ${res?html`<div className="card">${res.courses.map(c=>html`<div key=${c.code} style=${{margin:"10px 0"}}>
+        <div className="ch"><b>${c.code}${c.target_grade?` → ${c.target_grade}`:""}</b><span>${c.hours} h/week</span></div>
+        <div className="track"><div className=${"fill r-"+c.risk.replace("-","")} style=${{width:(c.hours/mx*100)+"%"}}></div></div>
+        <div className="mut">${c.focus}</div></div>`)}</div>
+      ${res.days.map(d=>html`<div className="card day" key=${d.day}><div className="ch"><b>${d.day}</b><span className="mut">${d.minutes?d.minutes+" min":"free"}</span></div>
+        ${d.sessions.map((x,i)=>html`<div className="sess" key=${i}><span className="tag">${x.code}</span> ${x.minutes} min · ${x.focus}</div>`)}</div>`)}
+      <div className="mut">Sunday: rest or catch up. ${res.note}</div>`:null}
+  </div>`;
+}
+
+function App(){
+  const [app,setApp]=useState(()=>{try{return JSON.parse(localStorage.getItem(KEY))||blank()}catch{return blank()}});
+  const [tab,setTab]=useState("Profile");
+  useEffect(()=>{try{localStorage.setItem(KEY,JSON.stringify(app))}catch{}},[app]);
+  const up=fn=>setApp(a=>{const x=structuredClone(a);fn(x);return x});
+  const P={app,up,goto:setTab}, V={Courses,Results,Target,Plan};
+  return html`<div className="app"><header><h1>🎓 Grade Planner</h1><span className="chipx">Prototype · trained on simulated data</span></header>
+    <main>${tab==="Profile"?html`<${Profile} ...${P} load=${()=>setApp(sample())}/>`:html`<${V[tab]} ...${P}/>`}</main>
+    <nav>${TABS.map(([t,i])=>html`<button key=${t} className=${t===tab?"on":""} onClick=${()=>setTab(t)}><span>${i}</span>${t}</button>`)}</nav></div>`;
+}
+ReactDOM.createRoot(document.getElementById("root")).render(html`<${App}/>`);
+</script>
+</body>
+</html>
